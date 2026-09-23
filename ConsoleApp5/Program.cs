@@ -13,3 +13,21 @@
 
 //Question 1 ANSWER
 
+
+//Question 
+
+//a) The parent class is Shipment.   
+
+
+//b) The child class is ExpressShipment.
+
+
+//c) The member inherited by ExpressShipment is TrackingCode.   
+
+
+//d) Inheritance is better because it avoids code duplication, promotes code reusability, and makes maintenance and updates easier.
+
+
+
+
+//Question 2 ANSWER
