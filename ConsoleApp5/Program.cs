@@ -31,3 +31,63 @@
 
 
 //Question 2 ANSWER
+
+public struct DeliveryAddress
+{
+    private string street;
+    private string city;
+
+    public string Street
+    {
+        get { return street; }
+        set { street = value; }
+    }
+
+    public string City
+    {
+        get { return city; }
+        set { city = value; }
+    }
+}
+
+
+public class Shipment
+{
+    private string trackingCode;
+    private DeliveryAddress address;
+
+    public string TrackingCode
+    {
+        get { return trackingCode; }
+        set { trackingCode = value; }
+    }
+
+    public DeliveryAddress Address
+    {
+        get { return address; }
+        set { address = value; }
+    }
+}
+
+
+public class DeliveryCenter
+{
+    private string centerName;
+    private DeliveryAddress location;
+
+    public string CenterName
+    {
+        get { return centerName; }
+        set { centerName = value; }
+    }
+
+    public DeliveryAddress Location
+    {
+        get { return location; }
+        set { location = value; }
+    }
+}
+
+
+
+//Question 3 ANSWER
