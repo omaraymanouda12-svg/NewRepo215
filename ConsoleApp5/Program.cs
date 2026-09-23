@@ -32,72 +32,12 @@
 
 //Question 2 ANSWER
 
-public struct DeliveryAddress
-{
-    private string street;
-    private string city;
-
-    public string Street
-    {
-        get { return street; }
-        set { street = value; }
-    }
-
-    public string City
-    {
-        get { return city; }
-        set { city = value; }
-    }
-}
 
 
-public class Shipment
-{
-    private string trackingCode;
-    private DeliveryAddress address;
-
-    public string TrackingCode
-    {
-        get { return trackingCode; }
-        set { trackingCode = value; }
-    }
-
-    public DeliveryAddress Address
-    {
-        get { return address; }
-        set { address = value; }
-    }
-}
-
-
-public class DeliveryCenter
-{
-    private string centerName;
-    private DeliveryAddress location;
-
-    public string CenterName
-    {
-        get { return centerName; }
-        set { centerName = value; }
-    }
-
-    public DeliveryAddress Location
-    {
-        get { return location; }
-        set { location = value; }
-    }
-}
-
-
-
-//Question 3 ANSWER
-
-
-
+using System;
 
 namespace SmartDeliveryManagement
 {
-
     public struct DeliveryAddress
     {
         public string Street { get; set; }
@@ -118,18 +58,15 @@ namespace SmartDeliveryManagement
         public decimal DeliveryFee { get; set; }
         public DeliveryAddress Destination { get; set; }
 
-       
-        public decimal EstimatedCost
+        public virtual decimal EstimatedCost
         {
             get { return DeliveryFee + (Weight * 5); }
         }
 
-     
         public Shipment()
         {
         }
 
-       
         public Shipment(string trackingCode, string description, decimal weight, decimal deliveryFee, DeliveryAddress destination)
         {
             TrackingCode = trackingCode;
@@ -139,45 +76,300 @@ namespace SmartDeliveryManagement
             Destination = destination;
         }
 
-       
         public void UpdateDeliveryFee(decimal newFee)
         {
             DeliveryFee = newFee;
         }
 
-      
-        public void PrintShipment()
+        public virtual void PrintShipment()
         {
             Console.WriteLine($"Tracking Code: {TrackingCode}");
             Console.WriteLine($"Description: {Description}");
             Console.WriteLine($"Weight: {Weight}");
             Console.WriteLine($"Delivery Fee: {DeliveryFee}");
+            Console.WriteLine($"Estimated Cost: {EstimatedCost}");
             Console.WriteLine($"Destination: {Destination.City}, {Destination.Street}");
         }
     }
 
-   
+    public class StandardShipment : Shipment
+    {
+        public StandardShipment() : base()
+        {
+        }
+
+        public StandardShipment(string trackingCode, string description, decimal weight, decimal deliveryFee, DeliveryAddress destination)
+            : base(trackingCode, description, weight, deliveryFee, destination)
+        {
+        }
+    }
+
+    public class ExpressShipment : Shipment
+    {
+        private decimal extraFee;
+        public decimal ExtraFee
+        {
+            get { return extraFee; }
+            set
+            {
+                if (value < 0)
+                    extraFee = 0;
+                else
+                    extraFee = value;
+            }
+        }
+
+        public override decimal EstimatedCost
+        {
+            get { return base.EstimatedCost + ExtraFee; }
+        }
+
+        public ExpressShipment() : base()
+        {
+        }
+
+        public ExpressShipment(string trackingCode, string description, decimal weight, decimal deliveryFee, DeliveryAddress destination, decimal extraFee)
+            : base(trackingCode, description, weight, deliveryFee, destination)
+        {
+            ExtraFee = extraFee;
+        }
+
+        public override void PrintShipment()
+        {
+            base.PrintShipment();
+            Console.WriteLine($"Extra Fee: {ExtraFee}");
+        }
+    }
+
+    public class InternationalShipment : Shipment
+    {
+        private string destinationCountry;
+        public string DestinationCountry
+        {
+            get { return destinationCountry; }
+            set
+            {
+                if (string.IsNullOrWhiteSpace(value))
+                    destinationCountry = "Unknown";
+                else
+                    destinationCountry = value;
+            }
+        }
+
+        private decimal customsFee;
+        public decimal CustomsFee
+        {
+            get { return customsFee; }
+            set
+            {
+                if (value < 0)
+                    customsFee = 0;
+                else
+                    customsFee = value;
+            }
+        }
+
+        public override decimal EstimatedCost
+        {
+            get { return base.EstimatedCost + CustomsFee; }
+        }
+
+        public InternationalShipment() : base()
+        {
+        }
+
+        public InternationalShipment(string trackingCode, string description, decimal weight, decimal deliveryFee, DeliveryAddress destination, string destinationCountry, decimal customsFee)
+            : base(trackingCode, description, weight, deliveryFee, destination)
+        {
+            DestinationCountry = destinationCountry;
+            CustomsFee = customsFee;
+        }
+
+        public override void PrintShipment()
+        {
+            base.PrintShipment();
+            Console.WriteLine($"Destination Country: {DestinationCountry}");
+            Console.WriteLine($"Customs Fee: {CustomsFee}");
+        }
+    }
+
     public class DeliveryCenter
     {
         public string CenterName { get; set; }
-        public DeliveryAddress Location { get; set; }
+
+        private Shipment[] shipments = new Shipment[20];
+        private int shipmentCount = 0;
+
+        public Shipment[] Shipments
+        {
+            get { return shipments; }
+        }
+
+        public Shipment this[string trackingCode]
+        {
+            get
+            {
+                for (int i = 0; i < shipmentCount; i++)
+                {
+                    if (shipments[i] != null && shipments[i].TrackingCode == trackingCode)
+                    {
+                        return shipments[i];
+                    }
+                }
+                return null;
+            }
+        }
 
         public DeliveryCenter()
         {
         }
 
-        public DeliveryCenter(string centerName, DeliveryAddress location)
+        public DeliveryCenter(string centerName)
         {
             CenterName = centerName;
-            Location = location;
         }
 
-        public void PrintCenter()
+        public bool AddShipment(Shipment shipment)
         {
-            Console.WriteLine($"Center Name: {CenterName}");
-            Console.WriteLine($"Location: {Location.City}, {Location.Street}");
+            if (shipmentCount < 20)
+            {
+                shipments[shipmentCount] = shipment;
+                shipmentCount++;
+                return true;
+            }
+            return false;
+        }
+
+        public bool RemoveShipment(string trackingCode)
+        {
+            for (int i = 0; i < shipmentCount; i++)
+            {
+                if (shipments[i] != null && shipments[i].TrackingCode == trackingCode)
+                {
+                    for (int j = i; j < shipmentCount - 1; j++)
+                    {
+                        shipments[j] = shipments[j + 1];
+                    }
+                    shipments[shipmentCount - 1] = null;
+                    shipmentCount--;
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        public void PrintAllShipments()
+        {
+            Console.WriteLine($"--- Shipments in Delivery Center: {CenterName} ---");
+            for (int i = 0; i < shipmentCount; i++)
+            {
+                if (shipments[i] != null)
+                {
+                    shipments[i].PrintShipment();
+                    Console.WriteLine("--------------------------");
+                }
+            }
+        }
+    }
+
+    class Program
+    {
+        static void Main(string[] args)
+        {
+            Console.Write("Enter Delivery Center Name: ");
+            string centerName = Console.ReadLine();
+            DeliveryCenter center = new DeliveryCenter(centerName);
+
+            Console.WriteLine("\n--- Enter Standard Shipment Details ---");
+            StandardShipment stdShipment = new StandardShipment();
+            Console.Write("Tracking Code: ");
+            stdShipment.TrackingCode = Console.ReadLine();
+            Console.Write("Description: ");
+            stdShipment.Description = Console.ReadLine();
+            Console.Write("Weight: ");
+            stdShipment.Weight = decimal.Parse(Console.ReadLine());
+            Console.Write("Delivery Fee: ");
+            stdShipment.DeliveryFee = decimal.Parse(Console.ReadLine());
+            Console.Write("City: ");
+            string stdCity = Console.ReadLine();
+            Console.Write("Street: ");
+            string stdStreet = Console.ReadLine();
+            stdShipment.Destination = new DeliveryAddress(stdStreet, stdCity);
+            center.AddShipment(stdShipment);
+
+            Console.WriteLine("\n--- Enter Express Shipment Details ---");
+            ExpressShipment expShipment = new ExpressShipment();
+            Console.Write("Tracking Code: ");
+            expShipment.TrackingCode = Console.ReadLine();
+            Console.Write("Description: ");
+            expShipment.Description = Console.ReadLine();
+            Console.Write("Weight: ");
+            expShipment.Weight = decimal.Parse(Console.ReadLine());
+            Console.Write("Delivery Fee: ");
+            expShipment.DeliveryFee = decimal.Parse(Console.ReadLine());
+            Console.Write("Extra Fee: ");
+            expShipment.ExtraFee = decimal.Parse(Console.ReadLine());
+            Console.Write("City: ");
+            string expCity = Console.ReadLine();
+            Console.Write("Street: ");
+            string expStreet = Console.ReadLine();
+            expShipment.Destination = new DeliveryAddress(expStreet, expCity);
+            center.AddShipment(expShipment);
+
+            Console.WriteLine("\n--- Enter International Shipment Details ---");
+            InternationalShipment intShipment = new InternationalShipment();
+            Console.Write("Tracking Code: ");
+            intShipment.TrackingCode = Console.ReadLine();
+            Console.Write("Description: ");
+            intShipment.Description = Console.ReadLine();
+            Console.Write("Weight: ");
+            intShipment.Weight = decimal.Parse(Console.ReadLine());
+            Console.Write("Delivery Fee: ");
+            intShipment.DeliveryFee = decimal.Parse(Console.ReadLine());
+            Console.Write("Destination Country: ");
+            intShipment.DestinationCountry = Console.ReadLine();
+            Console.Write("Customs Fee: ");
+            intShipment.CustomsFee = decimal.Parse(Console.ReadLine());
+            Console.Write("City: ");
+            string intCity = Console.ReadLine();
+            Console.Write("Street: ");
+            string intStreet = Console.ReadLine();
+            intShipment.Destination = new DeliveryAddress(intStreet, intCity);
+            center.AddShipment(intShipment);
+
+            Console.WriteLine("\n================================");
+            center.PrintAllShipments();
+
+            Console.Write("\nEnter Tracking Code to Search: ");
+            string searchCode = Console.ReadLine();
+            Shipment foundShipment = center[searchCode];
+            if (foundShipment != null)
+            {
+                Console.WriteLine("\nShipment Found Successfully!");
+                foundShipment.PrintShipment();
+            }
+            else
+            {
+                Console.WriteLine("\nShipment not found!");
+            }
+
+            Console.Write("\nEnter Tracking Code of Shipment to Remove: ");
+            string removeCode = Console.ReadLine();
+            bool removed = center.RemoveShipment(removeCode);
+            if (removed)
+            {
+                Console.WriteLine("\nShipment removed successfully!");
+            }
+            else
+            {
+                Console.WriteLine("\nShipment could not be found for removal.");
+            }
+
+            Console.WriteLine("\n================================");
+            Console.WriteLine("Remaining Shipments:");
+            center.PrintAllShipments();
         }
     }
 }
+//ALL ANSSWER OF QUESTIONS ARE IN THE CODE ABOVE.
 
-//Question 4 ANSWER
